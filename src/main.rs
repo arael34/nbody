@@ -42,13 +42,12 @@ impl Position for OrbitalBody {
 }
 
 struct Simulation {
-    size: (f32, f32),
     qt: QuadTree<OrbitalBody>,
 }
 
 impl Simulation {
     fn new(_ctx: &mut Context, qt: QuadTree<OrbitalBody>) -> Self {
-        Simulation{ size: (WIDTH, HEIGHT), qt }
+        Simulation{ qt }
     }
 }
 
