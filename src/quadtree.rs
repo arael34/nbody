@@ -135,6 +135,7 @@ mod tests {
         y: f64,
     }
 
+    #[allow(dead_code)]
     impl Point2D {
         fn new(x: f64, y: f64) -> Self {
             Point2D{ x, y }
@@ -196,7 +197,7 @@ mod tests {
     }
     #[test]
     fn test_default() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
+        let qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
         assert!(qt.is_leaf())
     }
 }

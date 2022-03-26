@@ -1,7 +1,7 @@
 /*
 TODO:
 
-
+add fps
 */
 
 mod quadtree;
@@ -12,7 +12,7 @@ use ggez::{
             GameResult, 
             Context, 
             graphics, 
-            graphics::{Color, Mesh}, 
+            graphics::Color, 
             ContextBuilder, 
             event,
             conf::{WindowMode, WindowSetup},
