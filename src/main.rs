@@ -84,12 +84,21 @@ fn main() {
         .expect("Failed to create context.");
 
     let mut qt = QuadTree::<OrbitalBody>::new(
+<<<<<<< Updated upstream
                                                 Bound::new(
                                                             ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
                                                           (WIDTH / 2.).into(), 
                                                           (HEIGHT / 2.).into()
                                                         ));
     let o = OrbitalBody::new((400., 400.), 20., 0.);
+=======
+                    Bound::new(
+                    ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
+                    (WIDTH / 2.).into(), 
+                    (HEIGHT / 2.).into()
+                ));
+    let o = OrbitalBody::new((400., 400.), 20.);
+>>>>>>> Stashed changes
     qt.insert(o);
 
     let simulation = Simulation::new(&mut ctx, qt);
