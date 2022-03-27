@@ -27,11 +27,14 @@ const FPS: u8 = 60;
 struct OrbitalBody {
     pos: (f32, f32),
     mass: f32,
+    vel: f32,
+    acc: f32,
+    ang: f32,
 }
 
 impl OrbitalBody {
-    fn new(pos: (f32, f32), mass: f32) -> Self {
-        OrbitalBody {pos, mass}
+    fn new(pos: (f32, f32), mass: f32, ang: f32) -> Self {
+        OrbitalBody {pos, mass, vel: 0., acc: 0., ang }
     }
 }
 
@@ -63,8 +66,8 @@ impl EventHandler for Simulation {
                 graphics::DrawMode::fill(),
                 Point2{ x: i.pos.0, y: i.pos.1 },
                 i.mass,
-                5.,
-                [0.3, 0.3, 0.0, 1.0].into(),
+                1.,
+                [0., 0.3, 1., 1.].into(),
             )?;
             graphics::draw(ctx, &circle, (Point2 { x: 0.0, y: 0.0 },))?;
         }
@@ -74,7 +77,7 @@ impl EventHandler for Simulation {
        
 #[allow(unused_variables, unused_mut)]
 fn main() {
-    let (mut ctx, event_loop) = ContextBuilder::new("Simulation", "j")
+    let (mut ctx, event_loop) = ContextBuilder::new("Simulation", "")
         .window_setup(WindowSetup::default().title("Simulation"))
         .window_mode(WindowMode::default().dimensions(WIDTH, HEIGHT))
         .build()
@@ -86,7 +89,7 @@ fn main() {
                                                           (WIDTH / 2.).into(), 
                                                           (HEIGHT / 2.).into()
                                                         ));
-    let o = OrbitalBody::new((400., 400.), 20.);
+    let o = OrbitalBody::new((400., 400.), 20., 0.);
     qt.insert(o);
 
     let simulation = Simulation::new(&mut ctx, qt);
