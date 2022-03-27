@@ -66,8 +66,8 @@ impl EventHandler for Simulation {
                 graphics::DrawMode::fill(),
                 Point2{ x: i.pos.0, y: i.pos.1 },
                 i.mass,
-                1.,
-                [0., 0.3, 1., 1.].into(),
+                0.05,
+                [0., 0.5, 1., 1.].into(),
             )?;
             graphics::draw(ctx, &circle, (Point2 { x: 0.0, y: 0.0 },))?;
         }
@@ -84,23 +84,14 @@ fn main() {
         .expect("Failed to create context.");
 
     let mut qt = QuadTree::<OrbitalBody>::new(
-<<<<<<< Updated upstream
-                                                Bound::new(
-                                                            ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
-                                                          (WIDTH / 2.).into(), 
-                                                          (HEIGHT / 2.).into()
-                                                        ));
-    let o = OrbitalBody::new((400., 400.), 20., 0.);
-=======
-                    Bound::new(
-                    ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
-                    (WIDTH / 2.).into(), 
-                    (HEIGHT / 2.).into()
-                ));
-    let o = OrbitalBody::new((400., 400.), 20.);
->>>>>>> Stashed changes
-    qt.insert(o);
-
+                                Bound::new(
+                                ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
+                                (WIDTH / 2.).into(), 
+                                (HEIGHT / 2.).into()
+                                    ));
+    let o = OrbitalBody::new((400., 400.), 5., 0.);
+    let r = OrbitalBody::new((200., 100.), 2., 0.);
+    qt.insert_all(vec![o, r]);
     let simulation = Simulation::new(&mut ctx, qt);
     event::run(ctx, event_loop, simulation);
 }
