@@ -6,14 +6,13 @@ pub trait Position {
     fn position(&self) -> Point;
 }
 
-#[allow(dead_code, unused_variables)]
+#[derive(Debug)]
 pub struct Bound {
     pos: Point,
     half_x: f64,
     half_y: f64,
 }
 
-#[allow(dead_code, unused_variables)]
 impl Bound {
     pub fn new(pos: Point, half_x: f64, half_y: f64) -> Self {
         Bound { pos, half_x, half_y }
@@ -41,6 +40,7 @@ impl Bound {
 
 #[allow(dead_code, unused_variables)]
 // main quadtree struct
+#[derive(Debug)]
 pub struct QuadTree<T> {
     bounds: Bound, // bounds of QuadTree
     // depth: usize,
@@ -109,6 +109,15 @@ where T: Position {
             } 
         }
         res
+    }
+    pub fn clear(&mut self) -> () {
+        self.items = vec![];
+        if !self.is_leaf() {
+            for s in self.subtrees.as_mut().unwrap() {
+                s.clear()
+            }
+            self.subtrees = None;
+        }
     }
     fn subdivide(&mut self) -> () {
         let pos = self.bounds.pos;
@@ -199,5 +208,17 @@ mod tests {
     fn test_default() {
         let qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
         assert!(qt.is_leaf())
+    }
+    #[test]
+    fn test_clear() {
+        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
+        let p = Point2D::new(400., 400.);
+        let q = Point2D::new(300., 500.);
+        let g = Point2D::new(200., 200.);
+        let b = Point2D::new(100., 100.);
+        let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q, g, b, a]);
+        qt.clear();
+        assert_eq!(Option::is_none(&qt.subtrees), true);
     }
 }
