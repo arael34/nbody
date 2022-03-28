@@ -33,14 +33,13 @@ struct OrbitalBody {
     mass: f32,
     vel: (f32, f32),
     acc: (f32, f32),
-    ang: f32,
 }
 
 impl OrbitalBody {
-    fn new(pos: (f32, f32), mass: f32, ang: f32) -> Self {
-        OrbitalBody {pos, mass, vel: (1., 0.), acc: (0., 0.), ang }
+    fn new(pos: (f32, f32), mass: f32, vel: (f32, f32)) -> Self {
+        OrbitalBody {pos, mass, vel, acc: (0., 0.) }
     }
-    fn check(&mut self, others: &Vec<OrbitalBody>) -> () {
+    fn check(&mut self, others: Vec<&OrbitalBody>) -> () {
         let mut force_x: f32 = 0.;
         let mut force_y: f32 = 0.;
         for other in others {
@@ -49,7 +48,8 @@ impl OrbitalBody {
             force_x += gravity * angle.cos();
             force_y += gravity * angle.sin();
         }
-        
+        self.acc.0 += force_x / self.mass * 10f32.powi(-11);
+        self.acc.1 += force_y / self.mass * 10f32.powi(-11);
     }
 }
 
@@ -73,13 +73,18 @@ impl Simulation {
 impl EventHandler for Simulation {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         for i in &mut self.items {
-            let mut new_x = i.pos.0 + i.vel.0 * i.ang.cos();
-            let mut new_y = i.pos.1 + i.vel.1 * i.ang.sin();
-            if new_x > WIDTH || new_x < 0. || new_y > HEIGHT || new_y < 0.{
+            //i.check(self.qt.query(&Bound::new((i.pos.0 as f64, i.pos.1 as f64), 5., 5.)));
+            i.vel.0 += i.acc.0;
+            i.vel.1 += i.acc.1;
+            let mut new_x = i.pos.0 + i.vel.0;
+            let mut new_y = i.pos.1 + i.vel.1;
+            if new_x > WIDTH || new_x < 0. {
                 new_x = max(0., min(WIDTH, new_x));
+                i.vel.0 = -i.vel.0;  
+            }
+            if new_y > HEIGHT || new_y < 0. {
                 new_y = max(0., min(HEIGHT, new_y));
-                let mut rng = rand::thread_rng();
-                i.ang = rng.gen::<f32>() * 2. * PI;
+                i.vel.1 = -i.vel.1;
             }
             i.pos = (new_x, new_y);
         }
@@ -117,11 +122,16 @@ fn main() {
                                 (WIDTH / 2.).into(), 
                                 (HEIGHT / 2.).into()
                                     ));
-
-    let o = OrbitalBody::new((400., 400.), 5., 0.);
-    let r = OrbitalBody::new((200., 100.), 2., 0.);
-    let mut simulation = Simulation::new(&mut ctx, vec![o.clone(), r.clone()], qt);
-    simulation.qt.insert_all(vec![o, r]);
+    let mut rng = rand::thread_rng();
+    let mut os = vec![];
+    let mut ps = vec![];
+    for i in 0..=10 {
+        let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), rng.gen::<f32>() * 5. + 2., (rng.gen::<f32>(), rng.gen::<f32>()));
+        os.push(o.clone());
+        ps.push(o);
+    }
+    let mut simulation = Simulation::new(&mut ctx, os, qt);
+    simulation.qt.insert_all(ps);
     event::run(ctx, event_loop, simulation);
 }
 
