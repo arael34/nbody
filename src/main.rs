@@ -60,39 +60,42 @@ impl Position for OrbitalBody {
 }
 
 struct Simulation {
-    items: Vec<OrbitalBody>,
     qt: QuadTree<OrbitalBody>,
 }
 
 impl Simulation {
-    fn new(_ctx: &mut Context, items: Vec<OrbitalBody>, qt: QuadTree<OrbitalBody>) -> Self {
-        Simulation{ items, qt }
+    fn new(_ctx: &mut Context, qt: QuadTree<OrbitalBody>) -> Self {
+        Simulation{ qt }
     }
 }
 
 impl EventHandler for Simulation {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        for i in &mut self.items {
-            //i.check(self.qt.query(&Bound::new((i.pos.0 as f64, i.pos.1 as f64), 5., 5.)));
-            i.vel.0 += i.acc.0;
-            i.vel.1 += i.acc.1;
-            let mut new_x = i.pos.0 + i.vel.0;
-            let mut new_y = i.pos.1 + i.vel.1;
-            if new_x > WIDTH || new_x < 0. {
-                new_x = max(0., min(WIDTH, new_x));
-                i.vel.0 = -i.vel.0;  
+        let mut new_bodies = Vec::<OrbitalBody>::new();
+        for i in self.qt.query_all() {
+            // i.check(self.qt.query(&Bound::new((i.pos.0 as f64, i.pos.1 as f64), 5., 5.)));
+            let mut a = *i;
+            a.vel.0 += a.acc.0;
+            a.vel.1 += a.acc.1;
+            a.pos.0 += a.vel.0;
+            a.pos.1 += a.vel.1;
+            if a.pos.0 > WIDTH || a.pos.0 < 0. {
+                a.pos.0 = max(0., min(WIDTH, a.pos.0));
+                a.vel.0 = -a.vel.0;  
             }
-            if new_y > HEIGHT || new_y < 0. {
-                new_y = max(0., min(HEIGHT, new_y));
-                i.vel.1 = -i.vel.1;
+            if a.pos.1 > HEIGHT || a.pos.1 < 0. {
+                a.pos.1 = max(0., min(HEIGHT, a.pos.1));
+                a.vel.1 = -a.vel.1;
             }
-            i.pos = (new_x, new_y);
+            new_bodies.push(a);
         }
+        self.qt.clear();
+        self.qt.insert_all(new_bodies);
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, Color::BLACK);
-        for i in &self.items {
+        for i in self.qt.query_all() {
             let circle = graphics::Mesh::new_circle(
                 ctx,
                 graphics::DrawMode::fill(),
@@ -119,8 +122,8 @@ fn main() {
     let mut qt = QuadTree::<OrbitalBody>::new(
                                 Bound::new(
                                 ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
-                                (WIDTH / 2.).into(), 
-                                (HEIGHT / 2.).into()
+                                (WIDTH / 2. + 1.).into(), 
+                                (HEIGHT / 2. + 1.).into()
                                     ));
     let mut rng = rand::thread_rng();
     let mut os = vec![];
@@ -130,7 +133,7 @@ fn main() {
         os.push(o.clone());
         ps.push(o);
     }
-    let mut simulation = Simulation::new(&mut ctx, os, qt);
+    let mut simulation = Simulation::new(&mut ctx, qt);
     simulation.qt.insert_all(ps);
     event::run(ctx, event_loop, simulation);
 }

@@ -95,8 +95,8 @@ where T: Position {
                                 .filter(|i| bounds.contains(&(i.position())))
                                 .collect();
         if !self.is_leaf() {
-            for i in 0..=3 {
-                res.extend(self.subtrees.as_ref().unwrap()[i].query(bounds));
+            for s in self.subtrees.as_ref().unwrap() {
+                res.extend(s.query(bounds));
             }
         }
         res
@@ -104,9 +104,18 @@ where T: Position {
     pub fn query_all(&self) -> Vec<&T> {
         let mut res: Vec<&T> = self.items.iter().collect();
         if !self.is_leaf() {
-            for i in 0..=3 {
-                res.extend(self.subtrees.as_ref().unwrap()[i].query_all());
+            for s in self.subtrees.as_ref().unwrap() {
+                res.extend(s.query_all());
             } 
+        }
+        res
+    }
+    pub fn query_all_mut(&mut self) -> Vec<&mut T> {
+        let mut res: Vec<&mut T> = self.items.iter_mut().collect();
+        if !Option::is_none(&self.subtrees) {
+            for s in self.subtrees.as_mut().unwrap() {
+                res.extend(s.query_all_mut());
+            }
         }
         res
     }
