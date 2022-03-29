@@ -1,3 +1,5 @@
+use std::mem;
+
 #[allow(dead_code, unused_variables)]
 // representing a point in 2d space
 pub type Point = (f64, f64);
@@ -60,12 +62,14 @@ where T: Position {
     }
     pub fn insert(&mut self, item: T) -> () {
         let pos = item.position();
-        if !self.bounds.contains(&pos) { return }
+        //if !self.bounds.contains(&pos) { return }
         if self.items.len() < Self::MAX_CAPACITY && self.is_leaf() {
             self.items.push(item);
             return
         } else if self.is_leaf() {
             self.subdivide();
+            let items: Vec<T> = mem::replace(&mut self.items, Vec::new());
+            self.insert_all(items);
         }
         if self.subtrees.as_ref().unwrap()[0].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[0].insert(item) }
         else if self.subtrees.as_ref().unwrap()[1].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[1].insert(item) }

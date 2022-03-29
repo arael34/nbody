@@ -57,7 +57,7 @@ impl OrbitalBody {
 
 impl Position for OrbitalBody {
     fn position(&self) -> Point {
-        (self.pos.0.into(), self.pos.1.into())
+        (self.pos.0 as f64, self.pos.1 as f64)
     }
 }
 
@@ -97,6 +97,7 @@ impl EventHandler for Simulation {
         self.qt.clear();
         self.qt.insert_all(new_bodies);
         // print!("{} ", self.qt.items[0].pos.0);
+        //print!("{} ", self.qt.items[0].pos.1.trunc() as i32);
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
@@ -142,7 +143,7 @@ fn main() {
     ));
     let mut rng = rand::thread_rng();
     let mut ps = vec![];
-    for i in 0..3 {
+    for i in 0..4 {
         let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), (rng.gen::<f32>() * 2. - 1., rng.gen::<f32>() * 2. - 1.));
         ps.push(o);
     }
