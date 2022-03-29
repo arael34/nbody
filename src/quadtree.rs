@@ -49,13 +49,13 @@ pub struct QuadTree<T> {
     // depth: usize,
     // max_depth: usize,
     items: Vec<T>, // contained items
-    subtrees: Option<[Box<QuadTree<T>>; 4]>,
+    pub subtrees: Option<[Box<QuadTree<T>>; 4]>,
 }
 
 #[allow(dead_code, unused_variables)]
 impl<T> QuadTree<T> 
 where T: Position {
-    const MAX_CAPACITY: usize = 4;
+    const MAX_CAPACITY: usize = 1;
 
     pub fn new(bounds: Bound) -> Self {
         let items = Vec::<T>::new();
@@ -63,24 +63,27 @@ where T: Position {
     }
     pub fn insert(&mut self, item: T) -> Option<T> {
         let pos = item.position();
-        //if !self.bounds.contains(&pos) { return }
+        if !self.bounds.contains(&pos) { return Some(item); }
         if self.items.len() < Self::MAX_CAPACITY && self.is_leaf() {
             self.items.push(item);
-            return None
+            return None;
         } else if self.is_leaf() {
             self.subdivide();
-            let items: Vec<T> = mem::replace(&mut self.items, Vec::new());
-            self.insert_all(items);
         }
-        let item_option = self.subtrees.as_mut().unwrap()[3].insert(item);
+        let mut item_option = self.subtrees.as_mut().unwrap()[0].insert(item);
         if !item_option.is_none() {
-            let item_option = self.subtrees.as_mut().unwrap()[2].insert(item_option.unwrap());
-        } else if !item_option.is_none() {
-            let item_option = self.subtrees.as_mut().unwrap()[1].insert(item_option.unwrap());
-        } else if !item_option.is_none() {
-            let item_option = self.subtrees.as_mut().unwrap()[0].insert(item_option.unwrap());
+            //println!("\nnot in 1");
+            item_option = self.subtrees.as_mut().unwrap()[1].insert(item_option.unwrap());
+        } if !item_option.is_none() {
+            //println!("not in 2");
+            item_option = self.subtrees.as_mut().unwrap()[2].insert(item_option.unwrap());
+        } if !item_option.is_none() {
+            //println!("not in 3");
+            item_option = self.subtrees.as_mut().unwrap()[3].insert(item_option.unwrap());
+        } if !item_option.is_none() {
+            //println!("not in 4. shouldn't be here");
         }
-        None
+        item_option
     }
     pub fn insert_all(&mut self, items: Vec<T>) {
         for i in items {
@@ -109,8 +112,8 @@ where T: Position {
     pub fn query_all(&self) -> Vec<&T> {
         let mut res: Vec<&T> = self.items.iter().collect();
         if !self.is_leaf() {
-            for i in 0..=3 {
-                res.extend(self.subtrees.as_ref().unwrap()[i].query_all());
+            for s in self.subtrees.as_ref().unwrap() {
+                res.extend(s.query_all());
             } 
         }
         res
@@ -137,11 +140,15 @@ where T: Position {
         let pos = self.bounds.pos;
         let x = self.bounds.x / 2.;
         let y = self.bounds.y / 2.;
+        let top_left = (pos.0, pos.1);
+        let bottom_left = (pos.0, pos.1 + y);
+        let bottom_right = (pos.0 + x, pos.1 + y);
+        let top_right = (pos.0 + x, pos.1);
         self.subtrees = Some([
-            Box::new(QuadTree::<T>::new(Bound::new((pos.0, pos.1), x, y))),
-            Box::new(QuadTree::<T>::new(Bound::new((pos.0, pos.1 + y), x, y))),
-            Box::new(QuadTree::<T>::new(Bound::new((pos.0 + x, pos.1), x, y))),
-            Box::new(QuadTree::<T>::new(Bound::new((pos.0 + x, pos.1 + y), x, y))),
+            Box::new(QuadTree::<T>::new(Bound::new(top_left, x, y))),
+            Box::new(QuadTree::<T>::new(Bound::new(top_right, x, y))),
+            Box::new(QuadTree::<T>::new(Bound::new(bottom_left, x, y))),
+            Box::new(QuadTree::<T>::new(Bound::new(bottom_right, x, y))),
         ]);
         // let all_items = mem::replace(&mut self.items, Vec::new());
         // self.insert_all(all_items);
@@ -153,7 +160,7 @@ where T: Position {
         let mut res: Vec<&QuadTree<T>> = vec![&self];
         if !self.is_leaf() {
             for s in self.subtrees.as_ref().unwrap() {
-                res.extend(s.get_trees());
+                    res.extend(s.get_trees());
             } 
         }
         res
@@ -181,69 +188,49 @@ mod tests {
             (self.x, self.y)
         }
     }
-    
     #[test]
-    fn test_insert() {
+    fn test_contains() {
         let mut qt = QuadTree::<Point2D>::new(Bound::new((0., 0.), 800., 800.));
-        let p = Point2D::new(400., 400.);
-        qt.insert(p);
-        let p = Point2D::new(400., 400.);
-        assert_eq!(qt.items[0], p);
-    }
-    #[test]
-    fn test_query() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        let p = Point2D::new(400., 400.);
-        qt.insert(p);
-        let p = Point2D::new(400., 400.);
-        assert_eq!(qt.query(&Bound::new((400., 400.), 200., 200.)), vec![&p]);
+        let p = Point2D::new(600., 600.);
+        let q = Point2D::new(700., 600.);
+        // let g = Point2D::new(600., 200.);
+        //let b = Point2D::new(100., 100.);
+        //let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q]);
+        let g = Point2D::new(600., 200.);
+        assert!(qt.subtrees.as_ref().unwrap()[1].bounds.contains(&g.position()));
     }
     #[test]
     fn test_query_all() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        let p = Point2D::new(400., 400.);
-        qt.insert(p);
-        let p = Point2D::new(400., 400.);
-        assert_eq!(qt.query_all(), vec![&p]);
-    }
-    #[test]
-    fn test_insert_all() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        let p = Point2D::new(400., 400.);
-        let q = Point2D::new(300., 500.);
-        let g = Point2D::new(200., 200.);
-        qt.insert_all(vec![p, q, g]);
-        let p = Point2D::new(400., 400.);
-        let q = Point2D::new(300., 500.);
-        let g = Point2D::new(200., 200.);
-        assert_eq!(qt.query_all(), vec![&p, &q, &g]);
+        let mut qt = QuadTree::<Point2D>::new(Bound::new((0., 0.), 800., 800.));
+        let p = Point2D::new(600., 600.);
+        let q = Point2D::new(700., 600.);
+        // let g = Point2D::new(600., 200.);
+        //let b = Point2D::new(100., 100.);
+        //let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q]);
+        assert_eq!(qt.query_all().len(), 2);
     }
     #[test]
     fn test_subdivide() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        let p = Point2D::new(400., 400.);
-        let q = Point2D::new(300., 500.);
-        let g = Point2D::new(200., 200.);
-        let b = Point2D::new(100., 100.);
-        let a = Point2D::new(100., 200.);
-        qt.insert_all(vec![p, q, g, b, a]);
+        let mut qt = QuadTree::<Point2D>::new(Bound::new((0., 0.), 800., 800.));
+        let p = Point2D::new(600., 600.);
+        let q = Point2D::new(700., 600.);
+        //let g = Point2D::new(600., 200.);
+        //let b = Point2D::new(100., 100.);
+        //let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q]);
         assert!(!qt.is_leaf());
     }
     #[test]
-    fn test_default() {
-        let qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        assert!(qt.is_leaf())
-    }
-    #[test]
-    fn test_clear() {
-        let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
-        let p = Point2D::new(400., 400.);
-        let q = Point2D::new(300., 500.);
-        let g = Point2D::new(200., 200.);
-        let b = Point2D::new(100., 100.);
-        let a = Point2D::new(100., 200.);
-        qt.insert_all(vec![p, q, g, b, a]);
-        qt.clear();
-        assert_eq!(Option::is_none(&qt.subtrees), true);
+    fn test_insert() {
+        let mut qt = QuadTree::<Point2D>::new(Bound::new((0., 0.), 800., 800.));
+        let p = Point2D::new(600., 600.);
+        let q = Point2D::new(700., 600.);
+        //let g = Point2D::new(600., 200.);
+        //let b = Point2D::new(100., 100.);
+        //let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q]);
+        assert_eq!(qt.subtrees.as_ref().unwrap()[3].items.len(), 1);
     }
 }
