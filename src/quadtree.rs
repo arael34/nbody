@@ -133,10 +133,9 @@ where T: Position {
     }
     fn subdivide(&mut self) -> () {
         let pos = self.bounds.pos;
-        let half_x = self.bounds.half_x / 2.;
-        let half_y = self.bounds.half_y / 2.;
+        let x = self.bounds.x / 2.;
+        let y = self.bounds.y / 2.;
         self.subtrees = Some([
-            Box::new(QuadTree::<T>::new(Bound::new((pos.0 + half_x, pos.1 + half_y), half_x, half_y))),
             Box::new(QuadTree::<T>::new(Bound::new((pos.0, pos.1), x, y))),
             Box::new(QuadTree::<T>::new(Bound::new((pos.0, pos.1 + y), x, y))),
             Box::new(QuadTree::<T>::new(Bound::new((pos.0 + x, pos.1), x, y))),
