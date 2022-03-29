@@ -63,12 +63,14 @@ where T: Position {
     }
     pub fn insert(&mut self, item: T) -> Option<T> {
         let pos = item.position();
-        if !self.bounds.contains(&pos) { return Some(item); }
+        //if !self.bounds.contains(&pos) { return }
         if self.items.len() < Self::MAX_CAPACITY && self.is_leaf() {
             self.items.push(item);
             return None
         } else if self.is_leaf() {
             self.subdivide();
+            let items: Vec<T> = mem::replace(&mut self.items, Vec::new());
+            self.insert_all(items);
         }
         let item_option = self.subtrees.as_mut().unwrap()[3].insert(item);
         if !item_option.is_none() {

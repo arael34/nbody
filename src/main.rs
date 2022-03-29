@@ -57,7 +57,7 @@ impl OrbitalBody {
 
 impl Position for OrbitalBody {
     fn position(&self) -> Point {
-        (self.pos.0.into(), self.pos.1.into())
+        (self.pos.0 as f64, self.pos.1 as f64)
     }
 }
 
@@ -97,6 +97,7 @@ impl EventHandler for Simulation {
         self.qt.clear();
         self.qt.insert_all(new_bodies);
         // print!("{} ", self.qt.items[0].pos.0);
+        //print!("{} ", self.qt.items[0].pos.1.trunc() as i32);
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
