@@ -116,7 +116,7 @@ impl EventHandler for Simulation {
             let rectangle = graphics::Mesh::new_rectangle(
                 ctx, 
                 graphics::DrawMode::stroke(2.), 
-                Rect::new((t.bounds.pos.0 - t.bounds.half_x) as f32, (t.bounds.pos.0 - t.bounds.half_y) as f32, t.bounds.half_x as f32 * 2., t.bounds.half_y as f32* 2.), 
+                Rect::new(t.bounds.pos.0 as f32, t.bounds.pos.0 as f32, t.bounds.x as f32, t.bounds.y as f32), 
                 [1., 1., 1., 1.,].into(),
             )?;
             graphics::draw(ctx, &rectangle, (Point2 { x: 0.0, y: 0.0 },))?;
@@ -136,13 +136,13 @@ fn main() {
 
     let mut qt = QuadTree::<OrbitalBody>::new(
         Bound::new(
-        ((WIDTH / 2.).into(), (HEIGHT / 2.).into()), 
-        (WIDTH / 2.).into(), 
-        (HEIGHT / 2.).into()
+        (0., 0.), 
+        WIDTH as f64, 
+        HEIGHT as f64
     ));
     let mut rng = rand::thread_rng();
     let mut ps = vec![];
-    for i in 0..3 {
+    for i in 0..10 {
         let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), (rng.gen::<f32>() * 2. - 1., rng.gen::<f32>() * 2. - 1.));
         ps.push(o);
     }
