@@ -8,9 +8,9 @@ pub trait Position {
 
 #[derive(Debug)]
 pub struct Bound {
-    pos: Point,
-    half_x: f64,
-    half_y: f64,
+    pub pos: Point,
+    pub half_x: f64,
+    pub half_y: f64,
 }
 
 impl Bound {
@@ -42,40 +42,35 @@ impl Bound {
 // main quadtree struct
 #[derive(Debug)]
 pub struct QuadTree<T> {
-    bounds: Bound, // bounds of QuadTree
+    pub bounds: Bound, // bounds of QuadTree
     // depth: usize,
     // max_depth: usize,
-    items: Vec<T>, // contained items
+    pub items: Vec<T>, // contained items
     subtrees: Option<[Box<QuadTree<T>>; 4]>,
 }
 
 #[allow(dead_code, unused_variables)]
 impl<T> QuadTree<T> 
 where T: Position {
-    const MAX_CAPACITY: usize = 4;
+    const MAX_CAPACITY: usize = 1;
 
     pub fn new(bounds: Bound) -> Self {
         let items = Vec::<T>::new();
         QuadTree::<T>{bounds, items, subtrees: None}
     }
-    pub fn insert(&mut self, item: T) -> Option<T> {
+    pub fn insert(&mut self, item: T) -> () {
         let pos = item.position();
-        if !self.bounds.contains(&pos) { return Some(item); }
-        else if self.items.len() < Self::MAX_CAPACITY {
+        if !self.bounds.contains(&pos) { return }
+        if self.items.len() < Self::MAX_CAPACITY && self.is_leaf() {
             self.items.push(item);
-            return None;
+            return
         } else if self.is_leaf() {
             self.subdivide();
         }
-        let mut item_option = self.subtrees.as_mut().unwrap()[0].insert(item);
-        if !item_option.is_none() {
-            item_option = self.subtrees.as_mut().unwrap()[1].insert(item_option.unwrap());
-        } else if !item_option.is_none() {
-            item_option = self.subtrees.as_mut().unwrap()[2].insert(item_option.unwrap());
-        } else if !item_option.is_none() {
-            item_option = self.subtrees.as_mut().unwrap()[3].insert(item_option.unwrap());
-        } // maybe take out last else if and change it to else
-        item_option
+        if self.subtrees.as_ref().unwrap()[0].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[0].insert(item) }
+        else if self.subtrees.as_ref().unwrap()[1].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[1].insert(item) }
+        else if self.subtrees.as_ref().unwrap()[2].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[2].insert(item) }
+        else if self.subtrees.as_ref().unwrap()[3].bounds.contains(&pos) { self.subtrees.as_mut().unwrap()[3].insert(item) }
     }
     pub fn insert_all(&mut self, items: Vec<T>) {
         for i in items {
@@ -142,6 +137,15 @@ where T: Position {
     fn is_leaf(&self) -> bool {
         Option::is_none(&self.subtrees)
     }
+    pub fn get_trees(&self) -> Vec<&QuadTree<T>> {
+        let mut res: Vec<&QuadTree<T>> = vec![&self];
+        if !self.is_leaf() {
+            for s in self.subtrees.as_ref().unwrap() {
+                res.extend(s.get_trees());
+            } 
+        }
+        res
+    }
 }
 
 mod tests {
@@ -186,9 +190,12 @@ mod tests {
     fn test_query_all() {
         let mut qt = QuadTree::<Point2D>::new(Bound::new((400., 400.), 400., 400.));
         let p = Point2D::new(400., 400.);
-        qt.insert(p);
-        let p = Point2D::new(400., 400.);
-        assert_eq!(qt.query_all(), vec![&p]);
+        let q = Point2D::new(300., 500.);
+        let g = Point2D::new(200., 200.);
+        let b = Point2D::new(100., 100.);
+        let a = Point2D::new(100., 200.);
+        qt.insert_all(vec![p, q, g, b, a]);
+        assert_eq!(qt.query_all().len(), 5);
     }
     #[test]
     fn test_insert_all() {
