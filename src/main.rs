@@ -25,7 +25,7 @@ use ggez::{
 const WIDTH: f32 = 800.;
 const HEIGHT: f32 = 800.;
 //const FPS: u8 = 60;
-const G: f32 = 0.1;
+const G: f32 = 0.05;
 
 #[derive(Copy, Clone)]
 struct OrbitalBody {
@@ -36,22 +36,22 @@ struct OrbitalBody {
 }
 
 impl OrbitalBody {
-    fn new(pos: (f32, f32), vel: (f32, f32)) -> Self {
-        OrbitalBody {pos, mass: 2., vel, acc: (0., 0.) }
+    fn new(pos: (f32, f32), mass: f32, vel: (f32, f32)) -> Self {
+        OrbitalBody {pos, mass, vel, acc: (0., 0.) }
     }
     fn check(&mut self, others: Vec<&OrbitalBody>) -> () {
         let mut force_x: f32 = 0.;
         let mut force_y: f32 = 0.;
         for other in others {
             let (distance, angle) = find_distance_angle(self.position(), other.position());
-            if distance > 1. {
+            if distance > 10. {
                 let gravity = G * self.mass * other.mass / distance.powi(2);
                 force_x += gravity * angle.cos();
                 force_y += gravity * angle.sin();
             }
         }
-        self.acc.0 += force_x;
-        self.acc.1 += force_y;
+        self.acc.0 = force_x / self.mass;
+        self.acc.1 = force_y / self.mass;
     }
 }
 
@@ -80,21 +80,19 @@ impl EventHandler for Simulation {
             a.check(self.qt.query_all());
             a.vel.0 += a.acc.0;
             a.vel.1 += a.acc.1;
-            if a.vel.0 > 1. { a.vel.0 = 1. }
-            if a.vel.1 > 1. { a.vel.1 = 1. }
-            if a.vel.0 < -1. { a.vel.0 = -1. }
-            if a.vel.1 < -1. { a.vel.1 = -1. }
+            // if a.vel.0 > 3. { a.vel.0 = 3. }
+            // if a.vel.1 > 3. { a.vel.1 = 3. }
+            // if a.vel.0 < -3. { a.vel.0 = -3. }
+            // if a.vel.1 < -3. { a.vel.1 = -3. }
             a.pos.0 += a.vel.0;
             a.pos.1 += a.vel.1;
             if a.pos.0 > WIDTH - 1. || a.pos.0 < 1. {
                 a.pos.0 = max(1., min(WIDTH - 1., a.pos.0));
                 a.vel.0 = -a.vel.0;
-                a.acc = (0., a.acc.1);
             }
             if a.pos.1 > HEIGHT - 1. || a.pos.1 < 1. {
                 a.pos.1 = max(1., min(HEIGHT - 1., a.pos.1));
                 a.vel.1 = -a.vel.1;
-                a.acc = (a.acc.0, 0.);
             }
             new_bodies.push(a);
         }
@@ -109,21 +107,21 @@ impl EventHandler for Simulation {
                 ctx,
                 graphics::DrawMode::fill(),
                 Point2{ x: i.pos.0, y: i.pos.1 },
-                4.,
+                5.,
                 0.05,
                 [0., 0.5, 1., 1.].into(),
             )?;
             graphics::draw(ctx, &circle, (Point2 { x: 0.0, y: 0.0 },))?;
         }
-        for t in self.qt.get_trees() {
-            let rectangle = graphics::Mesh::new_rectangle(
-                ctx, 
-                graphics::DrawMode::stroke(2.), 
-                Rect::new(t.bounds.pos.0 as f32, t.bounds.pos.1 as f32, t.bounds.x as f32, t.bounds.y as f32), 
-                [1., 1., 1., 1.,].into(),
-            )?;
-            graphics::draw(ctx, &rectangle, (Point2 { x: 0.0, y: 0.0 },))?;
-        }
+        // for t in self.qt.get_trees() {
+        //     let rectangle = graphics::Mesh::new_rectangle(
+        //         ctx, 
+        //         graphics::DrawMode::stroke(2.), 
+        //         Rect::new(t.bounds.pos.0 as f32, t.bounds.pos.1 as f32, t.bounds.x as f32, t.bounds.y as f32), 
+        //         [1., 1., 1., 1.,].into(),
+        //     )?;
+        //     graphics::draw(ctx, &rectangle, (Point2 { x: 0.0, y: 0.0 },))?;
+        // }
         graphics::present(ctx)
         }
 }
@@ -146,11 +144,12 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut ps = vec![];
     for i in 0..10 {
-        let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), (rng.gen::<f32>() * 2. - 1., rng.gen::<f32>() * 2. - 1.));
+        let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), rng.gen::<f32>() * 50. + 50., (0., 0.));
         ps.push(o);
     }
-    //ps.push(OrbitalBody::new((600., 600.), (0., 0.)));
-    //ps.push(OrbitalBody::new((700., 600.), (0., 0.)));
+    //ps.push(OrbitalBody::new((400., 500.), 40., (0.5, -0.5)));
+    //ps.push(OrbitalBody::new((300., 600.), 50., (0.5, -0.4)));
+    ps.push(OrbitalBody::new((400., 400.), 1000., (0., 0.)));
     //ps.push(OrbitalBody::new((200., 600.), (0., 0.)));
     //ps.push(OrbitalBody::new((100., 600.), (0., 0.)));
     let mut simulation = Simulation::new(&mut ctx, qt);
