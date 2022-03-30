@@ -6,7 +6,7 @@ add fps
 
 mod quadtree;
 
-use std::f32::consts::PI;
+//use std::f32::consts::PI;
 
 use rand::Rng;
 use quadtree::{Point, Bound, QuadTree, Position};
@@ -24,7 +24,7 @@ use ggez::{
 
 const WIDTH: f32 = 800.;
 const HEIGHT: f32 = 800.;
-const FPS: u8 = 60;
+//const FPS: u8 = 60;
 const G: f32 = 0.1;
 
 #[derive(Copy, Clone)]
@@ -76,8 +76,8 @@ impl EventHandler for Simulation {
         let mut new_bodies = Vec::<OrbitalBody>::new();
         for i in self.qt.query_all() {
             let mut a = *i;
-            a.check(self.qt.query(&Bound::new((a.pos.0 as f64, a.pos.1 as f64), 40., 40.)));
-            //a.check(self.qt.query_all());
+            //a.check(self.qt.query(&Bound::new((a.pos.0 as f64, a.pos.1 as f64), 40., 40.)));
+            a.check(self.qt.query_all());
             a.vel.0 += a.acc.0;
             a.vel.1 += a.acc.1;
             if a.vel.0 > 1. { a.vel.0 = 1. }
@@ -88,11 +88,13 @@ impl EventHandler for Simulation {
             a.pos.1 += a.vel.1;
             if a.pos.0 > WIDTH - 1. || a.pos.0 < 1. {
                 a.pos.0 = max(1., min(WIDTH - 1., a.pos.0));
-                a.vel.0 = -a.vel.0;  
+                a.vel.0 = -a.vel.0;
+                a.acc = (0., a.acc.1);
             }
             if a.pos.1 > HEIGHT - 1. || a.pos.1 < 1. {
                 a.pos.1 = max(1., min(HEIGHT - 1., a.pos.1));
                 a.vel.1 = -a.vel.1;
+                a.acc = (a.acc.0, 0.);
             }
             new_bodies.push(a);
         }
