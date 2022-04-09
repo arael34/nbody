@@ -88,11 +88,11 @@ impl EventHandler for Simulation {
             a.pos.1 += a.vel.1;
             if a.pos.0 > WIDTH - 1. || a.pos.0 < 1. {
                 a.pos.0 = max(1., min(WIDTH - 1., a.pos.0));
-                a.vel.0 = -a.vel.0;
+                a.vel.0 = -a.vel.0 / 2.;
             }
             if a.pos.1 > HEIGHT - 1. || a.pos.1 < 1. {
                 a.pos.1 = max(1., min(HEIGHT - 1., a.pos.1));
-                a.vel.1 = -a.vel.1;
+                a.vel.1 = -a.vel.1 / 2.;
             }
             new_bodies.push(a);
         }
@@ -143,13 +143,13 @@ fn main() {
     ));
     let mut rng = rand::thread_rng();
     let mut ps = vec![];
-    for i in 0..10 {
-        let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), rng.gen::<f32>() * 50. + 50., (0., 0.));
+    for i in 0..1 {
+        let o = OrbitalBody::new((rng.gen::<f32>() * WIDTH, rng.gen::<f32>() * HEIGHT), rng.gen::<f32>() * 50. + 50., (10., 0.));
         ps.push(o);
     }
     //ps.push(OrbitalBody::new((400., 500.), 40., (0.5, -0.5)));
     //ps.push(OrbitalBody::new((300., 600.), 50., (0.5, -0.4)));
-    ps.push(OrbitalBody::new((400., 400.), 1000., (0., 0.)));
+    ps.push(OrbitalBody::new((400., 400.), 2000., (0., 0.)));
     //ps.push(OrbitalBody::new((200., 600.), (0., 0.)));
     //ps.push(OrbitalBody::new((100., 600.), (0., 0.)));
     let mut simulation = Simulation::new(&mut ctx, qt);
@@ -165,7 +165,7 @@ fn min(a: f32, b: f32) -> f32 {
     if a < b { a } else { b }
 }
 fn find_distance_angle(a: (f64, f64), b: (f64, f64)) -> (f32, f32) {
-    (((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt() as f32,
+    (((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt() as f32 / 10.,
     (b.1 - a.1).atan2(b.0 - a.0) as f32)
 }
 
