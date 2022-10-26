@@ -15,7 +15,7 @@ use ggez::{
             GameResult, 
             Context, 
             graphics, 
-            graphics::{Color, Rect}, 
+            graphics::Color, 
             ContextBuilder, 
             event,
             conf::{WindowMode, WindowSetup},
